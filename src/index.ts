@@ -1,18 +1,23 @@
 import { inflateRaw } from "pako";
-import { GameSetting, Player, Replay } from "./dataStructures";
+import { Deck, GameSetting, Player, Replay } from "./dataStructures";
 
 const englishRegex: RegExp = /^[A-Za-z0-9_]*$/;
 const headerLength: number = 10;
 const decoder = new TextDecoder('utf-16');
 let dataView: DataView;
+let uint8Ary: Uint8Array;
 /**
  * Parse the entire replay to get a Replay object.
  * @param fileArrayBuffer provide the array buffer of age3Yrec file
  * @returns return a replay with game infos
  */
 export function parseReplay(fileArrayBuffer: ArrayBuffer): Replay {
-    const uint8Ary = inflateRaw(fileArrayBuffer.slice(headerLength));
+    uint8Ary = inflateRaw(fileArrayBuffer.slice(headerLength));
     dataView = new DataView(uint8Ary.buffer);
+    let position = 273;
+    let stringLength = readInt32(position);
+    const exeInfo = readString(position, stringLength);
+    let version: number = Number(exeInfo.split(' ')[1]);
     let dictionary = scanAllFields();
     let gameSetting: GameSetting = {
         allowCheats: dictionary['gameallowcheats'],
@@ -53,12 +58,41 @@ export function parseReplay(fileArrayBuffer: ArrayBuffer): Replay {
             homecityLevel: dictionary[`gameplayer${i}hclevel`],
             homecityName: dictionary[`gameplayer${i}homecityname`],
             slotId: dictionary[`gameplayer${i}id`],
-            playerName: dictionary[`gameplayer${i}name`]
+            playerName: dictionary[`gameplayer${i}name`],
+            intialDecks: [],
         }
         players.push(player);
     }
 
+    // intial decks
+    players.sort((a, b) => a.slotId - b.slotId);
+    let deckIndex: number = 0;
+    let allDecks = searchAllDecks();
+    for (let i = 0; i < players.length; i++) {
+        let intialDecks: Deck[] = [];
+        let previousDeckId: number = allDecks[0].deckId;
+        while (deckIndex < allDecks.length) {
+            if (allDecks[deckIndex].deckId < previousDeckId) {
+                break;
+            }
+            if (allDecks[deckIndex].deckName == '*') {
+                break;
+            }
+            intialDecks.push(allDecks[deckIndex]);
+            previousDeckId = allDecks[deckIndex].deckId;
+            deckIndex++;
+        }
+        while (deckIndex < allDecks.length) {
+            if (allDecks[deckIndex].deckId == 0) {
+                break;
+            }
+            deckIndex++;
+        }
+        players[i].intialDecks = intialDecks;
+    }
+
     let replay: Replay = {
+        exeVersion: version,
         setting: gameSetting,
         players: players,
     }
@@ -133,6 +167,56 @@ function scanAllFields(): { [k: string]: any } {
     return dictionary;
 }
 
+function searchAllDecks(): Deck[] {
+    let decks: Deck[] = [];
+    let position = 0;
+    while (true) {
+        let currentDeckPosition: number = position;
+        let nextDeckOffset: number = readInt32(position);
+        position += 4;
+        let check: number = readInt32(position);
+        position += 4;
+        if (check != 5) {
+            // if check isn't 5, it's not a deck
+            position = searchDeck(position);
+            if (position == -1) break;
+            continue;
+        }
+        let deckId: number = readInt32(position);
+        position += 4;
+        let stringLength: number = readInt32(position);
+        position += 4;
+        let deckName: string = readString(position, stringLength);
+        position += stringLength * 2;
+        var gameId = readInt32(position);
+        position += 4;
+        var isDefault = readBool(position);
+        position += 1;
+        let unKnownBool = readBool(position);
+        position += 1;
+        var cardCount = readInt32(position);
+        position += 4;
+        let techIds: number[] = [];
+        for (let j = 0; j < cardCount; j++) {
+            let techId = readInt32(position);
+            techIds.push(techId);
+            position += 4;
+        }
+
+        let deck: Deck = {
+            deckName: deckName,
+            deckId: deckId,
+            gameId: gameId,
+            isDefault: isDefault,
+            cardCount: cardCount,
+            techIds: techIds,
+        };
+        decks.push(deck);
+        position = currentDeckPosition + nextDeckOffset + 6;
+    }
+    return decks;
+}
+
 function readString(position: number, length: number): string {
     const end = position + length * 2;
     const string = decoder.decode(dataView.buffer.slice(position, end));
@@ -157,4 +241,36 @@ function readBool(position: number): boolean {
 function readInt8(position: number): number {
     const int8 = dataView.getUint8(position)
     return int8
+}
+
+function searchDeck(startIndex: number): number {
+    let position = startIndex;
+    while (position < uint8Ary.length) {
+        position = search(uint8Ary, [0x0, 0x0, 0x0, 0x44, 0x6b], position);
+        if (position == -1) break;
+        position += 9;
+        let int = readInt32(position);
+        if (int != 5) continue;
+        return position - 4;
+    }
+    return -1;
+}
+
+function search(array: Uint8Array, search: number[], fromIndex: number = 0): number {
+    const searchLen = search.length
+    const searchLast = search[searchLen - 1]
+    let index = array.indexOf(searchLast, fromIndex + searchLen - 1)
+
+    while (index !== -1) {
+        for (let i = searchLen - 1; i > 0; i--) {
+            if (search[i - 1] !== array[index - searchLen + i]) {
+                const searchIndex = search.lastIndexOf(array[index + 1])
+                const offset = searchIndex === -1 ? index + searchLen + 1 : index + searchLen - searchIndex
+                index = array.indexOf(searchLast, offset)
+                break;
+            }
+            if (i === 1) return index - searchLen + 1
+        }
+    }
+    return -1
 }
