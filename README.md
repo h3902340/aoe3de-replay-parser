@@ -1,6 +1,8 @@
 ### Parsing age3Yrec file of AOE3DE
 
-- [ ] Initial Decks (Revolt Decks & Federal Cards not included)
+- [X] game version, setting, player infos
+- [X] Initial Decks (Revolt Decks & Federal Cards not included)
+- [ ] Include Revolt Decks & Federal Cards
 - [ ] Chat
 - [ ] Duration
 - [ ] Shipments Sent
