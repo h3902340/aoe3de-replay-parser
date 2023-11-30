@@ -1,4 +1,4 @@
-### Parsing age3Yrec file of AOE3DE
+### Replay Parser for AOE3DE
 
 - [x] game version, setting, player infos
 - [x] Initial Decks (Revolt Decks & Federal Cards not included)
