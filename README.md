@@ -4,7 +4,7 @@
 - [x] Initial Decks (Revolt Decks & Federal Cards not included)
 - [ ] Include Revolt Decks & Federal Cards
 - [ ] Chat
-- [ ] Duration
+- [ ] Game Length
 - [ ] Shipments Sent
 - [ ] Techs Researched
 - [ ] Buildings Built
