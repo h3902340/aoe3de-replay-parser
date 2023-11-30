@@ -43,9 +43,9 @@ interface Player {
 
 /**
  * Parse the entire replay to get a Replay object.
- * @param file provide age3Yrec file
+ * @param fileArrayBuffer provide the array buffer of age3Yrec file
  * @returns return a replay with game infos
  */
-declare function parseReplay(file: Blob): Promise<Replay | null>;
+declare function parseReplay(fileArrayBuffer: ArrayBuffer): Replay;
 
 export { parseReplay };

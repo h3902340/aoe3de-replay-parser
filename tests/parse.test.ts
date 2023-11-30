@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { parseReplay } from '..';
+import { parseReplay } from '../src';
 import path from 'path';
 
 test('adds two numbers correctly', () => {
