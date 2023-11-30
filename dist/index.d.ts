@@ -1,4 +1,5 @@
 interface Replay {
+    exeVersion: number;
     setting: GameSetting;
     players: Player[];
 }
@@ -39,6 +40,15 @@ interface Player {
     homecityName: string;
     slotId: number;
     playerName: string;
+    intialDecks: Deck[];
+}
+interface Deck {
+    deckName: string;
+    deckId: number;
+    gameId: number;
+    isDefault: boolean;
+    cardCount: number;
+    techIds: number[];
 }
 
 /**
