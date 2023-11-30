@@ -8,6 +8,6 @@ test('adds two numbers correctly', () => {
     console.log(replay);
     expect(replay).toBeDefined();
     for (let i = 0; i < replay.players.length; i++) {
-        expect(replay.players[i].intialDecks.length).toBeGreaterThan(0);
+        expect(replay.players[i].initialDecks.length).toBeGreaterThan(0);
     }
 });

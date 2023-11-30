@@ -59,17 +59,17 @@ export function parseReplay(fileArrayBuffer: ArrayBuffer): Replay {
             homecityName: dictionary[`gameplayer${i}homecityname`],
             slotId: dictionary[`gameplayer${i}id`],
             playerName: dictionary[`gameplayer${i}name`],
-            intialDecks: [],
+            initialDecks: [],
         }
         players.push(player);
     }
 
-    // intial decks
+    // initial decks
     players.sort((a, b) => a.slotId - b.slotId);
     let deckIndex: number = 0;
     let allDecks = searchAllDecks();
     for (let i = 0; i < players.length; i++) {
-        let intialDecks: Deck[] = [];
+        let initialDecks: Deck[] = [];
         let previousDeckId: number = allDecks[0].deckId;
         while (deckIndex < allDecks.length) {
             if (allDecks[deckIndex].deckId < previousDeckId) {
@@ -78,7 +78,7 @@ export function parseReplay(fileArrayBuffer: ArrayBuffer): Replay {
             if (allDecks[deckIndex].deckName == '*') {
                 break;
             }
-            intialDecks.push(allDecks[deckIndex]);
+            initialDecks.push(allDecks[deckIndex]);
             previousDeckId = allDecks[deckIndex].deckId;
             deckIndex++;
         }
@@ -88,7 +88,7 @@ export function parseReplay(fileArrayBuffer: ArrayBuffer): Replay {
             }
             deckIndex++;
         }
-        players[i].intialDecks = intialDecks;
+        players[i].initialDecks = initialDecks;
     }
 
     let replay: Replay = {

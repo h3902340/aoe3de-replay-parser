@@ -42,7 +42,7 @@ export interface Player {
     homecityName: string,
     slotId: number,
     playerName: string,
-    intialDecks: Deck[],
+    initialDecks: Deck[],
 }
 
 export interface Deck {
