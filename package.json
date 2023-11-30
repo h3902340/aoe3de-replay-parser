@@ -14,5 +14,30 @@
   "scripts": {
     "build": "tsup",
     "test": "jest"
-  }
+  },
+  "version": "1.0.0",
+  "name": "@h3902340/aoe3de-replay-parser",
+  "description": "Parsing Age3Yrec file of AOE3DE",
+  "author": {
+    "name": "canyougiant",
+    "email": "ygmdwwyg@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/h3902340/aoe3de-replay-parser.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/canyougiant"
+  },
+  "bugs": {
+    "url": "https://github.com/h3902340/aoe3de-replay-parser/issues"
+  },
+  "homepage": "https://github.com/h3902340/aoe3de-replay-parser#readme",
+  "keywords": [
+    "replay",
+    "parser",
+    "aoe3",
+    "aoe3de",
+    "Age3Yrec"
+  ]
 }
