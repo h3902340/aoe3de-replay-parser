@@ -2,6 +2,7 @@ export interface Replay {
     exeVersion: number,
     setting: GameSetting,
     players: Player[],
+    teams: Team[],
 }
 
 export interface GameSetting {
@@ -43,6 +44,12 @@ export interface Player {
     slotId: number,
     playerName: string,
     initialDecks: Deck[],
+}
+
+export interface Team {
+    id: number,
+    name: string,
+    members: number[]
 }
 
 export interface Deck {

@@ -1,5 +1,5 @@
 import { inflateRaw } from "pako";
-import { Deck, GameSetting, Player, Replay } from "./dataStructures";
+import { Deck, GameSetting, Player, Replay, Team } from "./dataStructures";
 
 const englishRegex: RegExp = /^[A-Za-z0-9_]*$/;
 const headerLength: number = 10;
@@ -91,10 +91,13 @@ export function parseReplay(fileArrayBuffer: ArrayBuffer): Replay {
         players[i].initialDecks = initialDecks;
     }
 
+    let teams: Team[] = searchAllTeams();
+
     let replay: Replay = {
         exeVersion: version,
         setting: gameSetting,
         players: players,
+        teams: teams,
     }
 
     return replay;
@@ -215,6 +218,42 @@ function searchAllDecks(): Deck[] {
         position = currentDeckPosition + nextDeckOffset + 6;
     }
     return decks;
+}
+
+function searchAllTeams(): Team[] {
+    let teams: Team[] = [];
+    let seachBytes = [0x54, 0x45];
+    let position = 0;
+    while (position != -1) {
+        position = search(uint8Ary, seachBytes, position);
+        if (position == -1) break;
+        position += 6;
+        const key = readInt32(position);
+        position += 4;
+        if (key == 12) {
+            const teamId = readInt32(position);
+            position += 4;
+            let stringLength = readInt32(position);
+            position += 4;
+            const teamName = readString(position, stringLength);
+            position += stringLength * 2;
+            let members: number[] = [];
+            const teamMembersCount = readInt32(position);
+            position += 4;
+            for (let i = 0; i < teamMembersCount; i++) {
+                const slotId = readInt32(position);
+                position += 4;
+                members.push(slotId);
+            }
+            teams.push({
+                id: teamId,
+                name: teamName,
+                members: members
+            })
+        }
+        position = search(uint8Ary, seachBytes, position)
+    }
+    return teams;
 }
 
 function readString(position: number, length: number): string {
