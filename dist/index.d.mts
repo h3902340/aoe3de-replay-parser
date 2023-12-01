@@ -2,6 +2,7 @@ interface Replay {
     exeVersion: number;
     setting: GameSetting;
     players: Player[];
+    teams: Team[];
 }
 interface GameSetting {
     allowCheats: boolean;
@@ -40,7 +41,12 @@ interface Player {
     homecityName: string;
     slotId: number;
     playerName: string;
-    intialDecks: Deck[];
+    initialDecks: Deck[];
+}
+interface Team {
+    id: number;
+    name: string;
+    members: number[];
 }
 interface Deck {
     deckName: string;
@@ -50,6 +56,12 @@ interface Deck {
     cardCount: number;
     techIds: number[];
 }
+interface Message {
+    fromId: number;
+    toId: number;
+    message: string;
+    time: number;
+}
 
 /**
  * Parse the entire replay to get a Replay object.
@@ -57,5 +69,6 @@ interface Deck {
  * @returns return a replay with game infos
  */
 declare function parseReplay(fileArrayBuffer: ArrayBuffer): Replay;
+declare function parseChat(fileArrayBuffer: ArrayBuffer): Message[];
 
-export { parseReplay };
+export { parseChat, parseReplay };

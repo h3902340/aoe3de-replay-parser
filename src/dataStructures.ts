@@ -60,3 +60,10 @@ export interface Deck {
     cardCount: number,
     techIds: number[],
 }
+
+export interface Message {
+    fromId: number,
+    toId: number,
+    message: string,
+    time: number,
+}
