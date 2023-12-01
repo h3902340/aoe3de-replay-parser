@@ -13,7 +13,7 @@ npm: https://www.npmjs.com/package/@canyougiant/aoe3de-replay-parser
 - [ ] Units Trained
 - [ ] Winners & Losers
 - [ ] Unit Movements
-- [ ] Resource Calcuations
+- [ ] Resource Calculation
 - [ ] Import XML Files
 - [ ] Simulate Replay with Minimal Graphics
 - [ ] OOS Rec Investigation
