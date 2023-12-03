@@ -63,12 +63,16 @@ interface Message {
     time: number;
 }
 
-/**
- * Parse the entire replay to get a Replay object.
- * @param fileArrayBuffer provide the array buffer of age3Yrec file
- * @returns return a replay with game infos
- */
-declare function parseReplay(fileArrayBuffer: ArrayBuffer): Replay;
 declare function parseChat(fileArrayBuffer: ArrayBuffer): Message[];
 
-export { parseChat, parseReplay };
+declare function parseDeck(dataView: DataView, uint8Ary: Uint8Array): Deck[];
+
+declare function parseField(dataView: DataView): {
+    [k: string]: any;
+};
+
+declare function parseReplay(fileArrayBuffer: ArrayBuffer): Replay;
+
+declare function parseTeam(dataView: DataView, uint8Ary: Uint8Array): Team[];
+
+export { parseChat, parseDeck, parseField, parseReplay, parseTeam };

@@ -21,13 +21,22 @@ var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: tru
 var src_exports = {};
 __export(src_exports, {
   parseChat: () => parseChat,
-  parseReplay: () => parseReplay
+  parseDeck: () => parseDeck,
+  parseField: () => parseField,
+  parseReplay: () => parseReplay,
+  parseTeam: () => parseTeam
 });
 module.exports = __toCommonJS(src_exports);
+
+// src/parseChat.ts
 var import_pako = require("pako");
 
-// src/util.ts
+// src/constant.ts
+var headerLength = 10;
 var decoder = new TextDecoder("utf-16");
+var englishRegex = /^[A-Za-z0-9_]*$/;
+
+// src/util.ts
 function readString(dataView, position, length) {
   const end = position + length * 2;
   const string = decoder.decode(dataView.buffer.slice(position, end));
@@ -82,94 +91,7 @@ function search(array, search2, fromIndex = 0) {
   return -1;
 }
 
-// src/index.ts
-var englishRegex = /^[A-Za-z0-9_]*$/;
-var headerLength = 10;
-function parseReplay(fileArrayBuffer) {
-  let uint8Ary = (0, import_pako.inflateRaw)(fileArrayBuffer.slice(headerLength));
-  let dataView = new DataView(uint8Ary.buffer);
-  let position = 273;
-  let stringLength = readInt32(dataView, position);
-  const exeInfo = readString(dataView, position, stringLength);
-  let version = Number(exeInfo.split(" ")[1]);
-  let dictionary = scanAllFields(dataView);
-  let gameSetting = {
-    allowCheats: dictionary["gameallowcheats"],
-    blockade: dictionary["gameblockade"],
-    playerCount: dictionary["gamenumplayers"],
-    difficulty: dictionary["gamedifficulty"],
-    startingAge: dictionary["gamestartingage"],
-    endingAge: dictionary["gameendingage"],
-    isTreaty: dictionary["gamestartwithtreaty"],
-    allowTradeMonopoly: dictionary["gametrademonopoly"],
-    gameType: dictionary["gametype"],
-    mapCRC: dictionary["gamefilecrc"],
-    mapName: dictionary["gamefilename"],
-    mapSet: dictionary["gamefilenameext"],
-    freeForAll: dictionary["gamefreeforall"],
-    hostTime: dictionary["gamehosttime"],
-    koth: dictionary["gamekoth"],
-    latency: dictionary["gamelatency"],
-    mapSetName: dictionary["gamemapname"],
-    mapResource: dictionary["gamemapresources"],
-    radomSeed: dictionary["gamerandomseed"],
-    gameSpeed: dictionary["gamespeed"]
-  };
-  let players = [];
-  for (let i = 1; i <= gameSetting.playerCount; i++) {
-    let player = {
-      aiPersonality: dictionary[`gameplayer${i}aipersonality`],
-      avatarId: dictionary[`gameplayer${i}avatarid`],
-      civId: dictionary[`gameplayer${i}civ`],
-      civIsRandom: dictionary[`gameplayer${i}civwasrandom`],
-      clan: dictionary[`gameplayer${i}clan`],
-      color: dictionary[`gameplayer${i}color`],
-      explorerName: dictionary[`gameplayer${i}explorername`],
-      explorerSkinId: dictionary[`gameplayer${i}explorerskinid`],
-      handicap: dictionary[`gameplayer${i}handicap`],
-      homecityFileName: dictionary[`gameplayer${i}hcfilename`],
-      homecityLevel: dictionary[`gameplayer${i}hclevel`],
-      homecityName: dictionary[`gameplayer${i}homecityname`],
-      slotId: dictionary[`gameplayer${i}id`],
-      playerName: dictionary[`gameplayer${i}name`],
-      initialDecks: []
-    };
-    players.push(player);
-  }
-  players.sort((a, b) => a.slotId - b.slotId);
-  let deckIndex = 0;
-  let allDecks = searchAllDecks(dataView, uint8Ary);
-  for (let i = 0; i < players.length; i++) {
-    let initialDecks = [];
-    let previousDeckId = allDecks[0].deckId;
-    while (deckIndex < allDecks.length) {
-      if (allDecks[deckIndex].deckId < previousDeckId) {
-        break;
-      }
-      if (allDecks[deckIndex].deckName == "*") {
-        break;
-      }
-      initialDecks.push(allDecks[deckIndex]);
-      previousDeckId = allDecks[deckIndex].deckId;
-      deckIndex++;
-    }
-    while (deckIndex < allDecks.length) {
-      if (allDecks[deckIndex].deckId == 0) {
-        break;
-      }
-      deckIndex++;
-    }
-    players[i].initialDecks = initialDecks;
-  }
-  let teams = searchAllTeams(dataView, uint8Ary);
-  let replay = {
-    exeVersion: version,
-    setting: gameSetting,
-    players,
-    teams
-  };
-  return replay;
-}
+// src/parseChat.ts
 function parseChat(fileArrayBuffer) {
   let uint8Ary = (0, import_pako.inflateRaw)(fileArrayBuffer.slice(headerLength));
   let dataView = new DataView(uint8Ary.buffer);
@@ -338,7 +260,59 @@ function parseChat(fileArrayBuffer) {
   }
   return chat;
 }
-function scanAllFields(dataView) {
+
+// src/parseDeck.ts
+function parseDeck(dataView, uint8Ary) {
+  let decks = [];
+  let position = 0;
+  while (true) {
+    let currentDeckPosition = position;
+    let nextDeckOffset = readInt32(dataView, position);
+    position += 4;
+    let check = readInt32(dataView, position);
+    position += 4;
+    if (check != 5) {
+      position = searchDeck(dataView, uint8Ary, position);
+      if (position == -1)
+        break;
+      continue;
+    }
+    let deckId = readInt32(dataView, position);
+    position += 4;
+    let stringLength = readInt32(dataView, position);
+    position += 4;
+    let deckName = readString(dataView, position, stringLength);
+    position += stringLength * 2;
+    var gameId = readInt32(dataView, position);
+    position += 4;
+    var isDefault = readBool(dataView, position);
+    position += 1;
+    let unKnownBool = readBool(dataView, position);
+    position += 1;
+    var cardCount = readInt32(dataView, position);
+    position += 4;
+    let techIds = [];
+    for (let j = 0; j < cardCount; j++) {
+      let techId = readInt32(dataView, position);
+      techIds.push(techId);
+      position += 4;
+    }
+    let deck = {
+      deckName,
+      deckId,
+      gameId,
+      isDefault,
+      cardCount,
+      techIds
+    };
+    decks.push(deck);
+    position = currentDeckPosition + nextDeckOffset + 6;
+  }
+  return decks;
+}
+
+// src/parseField.ts
+function parseField(dataView) {
   let dictionary = {};
   let position = 0;
   let endPosition = 2e4;
@@ -403,55 +377,12 @@ function scanAllFields(dataView) {
   }
   return dictionary;
 }
-function searchAllDecks(dataView, uint8Ary) {
-  let decks = [];
-  let position = 0;
-  while (true) {
-    let currentDeckPosition = position;
-    let nextDeckOffset = readInt32(dataView, position);
-    position += 4;
-    let check = readInt32(dataView, position);
-    position += 4;
-    if (check != 5) {
-      position = searchDeck(dataView, uint8Ary, position);
-      if (position == -1)
-        break;
-      continue;
-    }
-    let deckId = readInt32(dataView, position);
-    position += 4;
-    let stringLength = readInt32(dataView, position);
-    position += 4;
-    let deckName = readString(dataView, position, stringLength);
-    position += stringLength * 2;
-    var gameId = readInt32(dataView, position);
-    position += 4;
-    var isDefault = readBool(dataView, position);
-    position += 1;
-    let unKnownBool = readBool(dataView, position);
-    position += 1;
-    var cardCount = readInt32(dataView, position);
-    position += 4;
-    let techIds = [];
-    for (let j = 0; j < cardCount; j++) {
-      let techId = readInt32(dataView, position);
-      techIds.push(techId);
-      position += 4;
-    }
-    let deck = {
-      deckName,
-      deckId,
-      gameId,
-      isDefault,
-      cardCount,
-      techIds
-    };
-    decks.push(deck);
-    position = currentDeckPosition + nextDeckOffset + 6;
-  }
-  return decks;
-}
-function searchAllTeams(dataView, uint8Ary) {
+
+// src/parseReplay.ts
+var import_pako2 = require("pako");
+
+// src/parseTeam.ts
+function parseTeam(dataView, uint8Ary) {
   let teams = [];
   let seachBytes = [84, 69];
   let position = 0;
@@ -483,13 +414,102 @@ function searchAllTeams(dataView, uint8Ary) {
         members
       });
     }
-    position = search(uint8Ary, seachBytes, position);
   }
   return teams;
+}
+
+// src/parseReplay.ts
+function parseReplay(fileArrayBuffer) {
+  let uint8Ary = (0, import_pako2.inflateRaw)(fileArrayBuffer.slice(headerLength));
+  let dataView = new DataView(uint8Ary.buffer);
+  let position = 273;
+  let stringLength = readInt32(dataView, position);
+  const exeInfo = readString(dataView, position, stringLength);
+  let version = Number(exeInfo.split(" ")[1]);
+  let dictionary = parseField(dataView);
+  let gameSetting = {
+    allowCheats: dictionary["gameallowcheats"],
+    blockade: dictionary["gameblockade"],
+    playerCount: dictionary["gamenumplayers"],
+    difficulty: dictionary["gamedifficulty"],
+    startingAge: dictionary["gamestartingage"],
+    endingAge: dictionary["gameendingage"],
+    isTreaty: dictionary["gamestartwithtreaty"],
+    allowTradeMonopoly: dictionary["gametrademonopoly"],
+    gameType: dictionary["gametype"],
+    mapCRC: dictionary["gamefilecrc"],
+    mapName: dictionary["gamefilename"],
+    mapSet: dictionary["gamefilenameext"],
+    freeForAll: dictionary["gamefreeforall"],
+    hostTime: dictionary["gamehosttime"],
+    koth: dictionary["gamekoth"],
+    latency: dictionary["gamelatency"],
+    mapSetName: dictionary["gamemapname"],
+    mapResource: dictionary["gamemapresources"],
+    radomSeed: dictionary["gamerandomseed"],
+    gameSpeed: dictionary["gamespeed"]
+  };
+  let players = [];
+  for (let i = 1; i <= gameSetting.playerCount; i++) {
+    let player = {
+      aiPersonality: dictionary[`gameplayer${i}aipersonality`],
+      avatarId: dictionary[`gameplayer${i}avatarid`],
+      civId: dictionary[`gameplayer${i}civ`],
+      civIsRandom: dictionary[`gameplayer${i}civwasrandom`],
+      clan: dictionary[`gameplayer${i}clan`],
+      color: dictionary[`gameplayer${i}color`],
+      explorerName: dictionary[`gameplayer${i}explorername`],
+      explorerSkinId: dictionary[`gameplayer${i}explorerskinid`],
+      handicap: dictionary[`gameplayer${i}handicap`],
+      homecityFileName: dictionary[`gameplayer${i}hcfilename`],
+      homecityLevel: dictionary[`gameplayer${i}hclevel`],
+      homecityName: dictionary[`gameplayer${i}homecityname`],
+      slotId: dictionary[`gameplayer${i}id`],
+      playerName: dictionary[`gameplayer${i}name`],
+      initialDecks: []
+    };
+    players.push(player);
+  }
+  players.sort((a, b) => a.slotId - b.slotId);
+  let deckIndex = 0;
+  let allDecks = parseDeck(dataView, uint8Ary);
+  for (let i = 0; i < players.length; i++) {
+    let initialDecks = [];
+    let previousDeckId = allDecks[0].deckId;
+    while (deckIndex < allDecks.length) {
+      if (allDecks[deckIndex].deckId < previousDeckId) {
+        break;
+      }
+      if (allDecks[deckIndex].deckName == "*") {
+        break;
+      }
+      initialDecks.push(allDecks[deckIndex]);
+      previousDeckId = allDecks[deckIndex].deckId;
+      deckIndex++;
+    }
+    while (deckIndex < allDecks.length) {
+      if (allDecks[deckIndex].deckId == 0) {
+        break;
+      }
+      deckIndex++;
+    }
+    players[i].initialDecks = initialDecks;
+  }
+  let teams = parseTeam(dataView, uint8Ary);
+  let replay = {
+    exeVersion: version,
+    setting: gameSetting,
+    players,
+    teams
+  };
+  return replay;
 }
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   parseChat,
-  parseReplay
+  parseDeck,
+  parseField,
+  parseReplay,
+  parseTeam
 });
 //# sourceMappingURL=index.js.map
