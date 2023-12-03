@@ -75,4 +75,4 @@ declare function parseReplay(fileArrayBuffer: ArrayBuffer): Replay;
 
 declare function parseTeam(dataView: DataView, uint8Ary: Uint8Array): Team[];
 
-export { parseChat, parseDeck, parseField, parseReplay, parseTeam };
+export { type Deck, type GameSetting, type Message, type Player, type Replay, type Team, parseChat, parseDeck, parseField, parseReplay, parseTeam };
