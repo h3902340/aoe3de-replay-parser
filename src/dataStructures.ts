@@ -6,6 +6,7 @@ export interface Replay {
 }
 
 export interface GameSetting {
+    gameName: string,
     allowCheats: boolean,
     blockade: boolean,
     playerCount: number,

@@ -15,6 +15,7 @@ export function parseReplay(fileArrayBuffer: ArrayBuffer): Replay {
     let version: number = Number(exeInfo.split(' ')[1]);
     let dictionary = parseField(dataView);
     let gameSetting: GameSetting = {
+        gameName: dictionary['gamename'],
         allowCheats: dictionary['gameallowcheats'],
         blockade: dictionary['gameblockade'],
         playerCount: dictionary['gamenumplayers'],

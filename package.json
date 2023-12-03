@@ -16,7 +16,7 @@
     "test": "jest"
   },
   "name": "@canyougiant/aoe3de-replay-parser",
-  "version": "1.3.4",
+  "version": "1.3.5",
   "description": "Parsing Age3Yrec file of AOE3DE",
   "repository": {
     "type": "git",
