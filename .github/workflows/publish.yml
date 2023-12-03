@@ -15,8 +15,6 @@ jobs:
                   registry-url: https://registry.npmjs.org
             - name: npm i
               run: npm i
-            - name: npm i @rollup/rollup-linux-x64-gnu
-              run: npm i @rollup/rollup-linux-x64-gnu
             - name: build
               run: npm run build
             - name: publish
