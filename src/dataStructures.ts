@@ -66,10 +66,20 @@ export interface Deck {
     techIds: number[],
 }
 
+export interface Commands {
+    chat: Message[],
+    resigns: Resign[],
+}
+
 export interface Message {
     fromId: number,
     toId: number,
     message: string,
+    time: number,
+}
+
+export interface Resign {
+    slotId: number,
     time: number,
 }
 
