@@ -1,3 +1,12 @@
+type CivInfo = {
+    name: string;
+    urlCircle: string;
+    urlRectanle: string;
+    urlLeft: string;
+    idCiv: number;
+    homecityJson: string;
+};
+
 interface Replay {
     exeVersion: number;
     setting: GameSetting;
@@ -5,6 +14,7 @@ interface Replay {
     teams: Team[];
 }
 interface GameSetting {
+    gameName: string;
     allowCheats: boolean;
     blockade: boolean;
     playerCount: number;
@@ -30,6 +40,7 @@ interface Player {
     aiPersonality: string;
     avatarId: string;
     civId: number;
+    civInfo: CivInfo;
     civIsRandom: boolean;
     clan: string;
     color: number;
@@ -75,4 +86,4 @@ declare function parseReplay(fileArrayBuffer: ArrayBuffer): Replay;
 
 declare function parseTeam(dataView: DataView, uint8Ary: Uint8Array): Team[];
 
-export { type Deck, type GameSetting, type Message, type Player, type Replay, type Team, parseChat, parseDeck, parseField, parseReplay, parseTeam };
+export { type CivInfo, type Deck, type GameSetting, type Message, type Player, type Replay, type Team, parseChat, parseDeck, parseField, parseReplay, parseTeam };

@@ -1,5 +1,5 @@
 import { inflateRaw } from "pako";
-import { headerLength } from "./constant";
+import { Civ, civMap, civToInfo, headerLength } from "./constant";
 import { Replay, GameSetting, Player, Deck, Team } from "./dataStructures";
 import { parseDeck } from "./parseDeck";
 import { parseField } from "./parseField";
@@ -40,10 +40,14 @@ export function parseReplay(fileArrayBuffer: ArrayBuffer): Replay {
 
     let players: Player[] = [];
     for (let i = 1; i <= gameSetting.playerCount; i++) {
+        let civId: number = dictionary[`gameplayer${i}civ`];
+        let civ: Civ = civMap.get(civId)!;
+        let civInfo = civToInfo.get(civ)!;
         let player: Player = {
             aiPersonality: dictionary[`gameplayer${i}aipersonality`],
             avatarId: dictionary[`gameplayer${i}avatarid`],
-            civId: dictionary[`gameplayer${i}civ`],
+            civId: civId,
+            civInfo: civInfo,
             civIsRandom: dictionary[`gameplayer${i}civwasrandom`],
             clan: dictionary[`gameplayer${i}clan`],
             color: dictionary[`gameplayer${i}color`],

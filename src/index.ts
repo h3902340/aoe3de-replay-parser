@@ -1,3 +1,4 @@
+import { CivInfo } from "./constant";
 import { Deck, GameSetting, Message, Player, Replay, Team } from "./dataStructures";
 import { parseChat } from "./parseChat";
 import { parseDeck } from "./parseDeck";
@@ -16,5 +17,6 @@ export {
     Player,
     Team,
     Deck,
-    Message
+    Message,
+    CivInfo
 }

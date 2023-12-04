@@ -1,3 +1,5 @@
+import { CivInfo } from "./constant";
+
 export interface Replay {
     exeVersion: number,
     setting: GameSetting,
@@ -33,6 +35,7 @@ export interface Player {
     aiPersonality: string,
     avatarId: string,
     civId: number,
+    civInfo: CivInfo,
     civIsRandom: boolean,
     clan: string,
     color: number,

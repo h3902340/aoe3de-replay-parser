@@ -1,10 +1,58 @@
-// src/parseChat.ts
-import { inflateRaw } from "pako";
-
 // src/constant.ts
 var headerLength = 10;
 var decoder = new TextDecoder("utf-16");
 var englishRegex = /^[A-Za-z0-9_]*$/;
+var civToInfo = /* @__PURE__ */ new Map([
+  [1 /* Spanish */, { name: "Spanish", urlCircle: "flag_hc_spanish.png", urlRectanle: "Flag_Spanish.png", urlLeft: "postgame_flag_spanish.png", idCiv: 1, homecityJson: "homecityspanish" }],
+  [2 /* British */, { name: "British", urlCircle: "flag_hc_british.png", urlRectanle: "Flag_British.png", urlLeft: "postgame_flag_british.png", idCiv: 2, homecityJson: "homecitybritish" }],
+  [3 /* French */, { name: "French", urlCircle: "flag_hc_french.png", urlRectanle: "Flag_French.png", urlLeft: "postgame_flag_french.png", idCiv: 3, homecityJson: "homecityfrench" }],
+  [4 /* Portuguese */, { name: "Portuguese", urlCircle: "flag_hc_portuguese.png", urlRectanle: "Flag_Portuguese.png", urlLeft: "postgame_flag_portuguese.png", idCiv: 4, homecityJson: "homecityportuguese" }],
+  [5 /* Dutch */, { name: "Dutch", urlCircle: "flag_hc_dutch.png", urlRectanle: "Flag_Dutch.png", urlLeft: "postgame_flag_dutch.png", idCiv: 5, homecityJson: "homecitydutch" }],
+  [6 /* Russians */, { name: "Russians", urlCircle: "flag_hc_russian.png", urlRectanle: "Flag_Russian.png", urlLeft: "postgame_flag_russian.png", idCiv: 6, homecityJson: "homecityrussians" }],
+  [7 /* Germans */, { name: "Germans", urlCircle: "flag_hc_german.png", urlRectanle: "Flag_German.png", urlLeft: "postgame_flag_german.png", idCiv: 7, homecityJson: "homecitygerman" }],
+  [8 /* Ottoman */, { name: "Ottoman", urlCircle: "flag_hc_ottoman.png", urlRectanle: "Flag_Ottoman.png", urlLeft: "postgame_flag_ottoman.png", idCiv: 8, homecityJson: "homecityottomans" }],
+  [9 /* Haudenosaunee */, { name: "Haudenosaunee", urlCircle: "flag_hc_iroquois.png", urlRectanle: "Flag_Iroquois.png", urlLeft: "postgame_flag_iroquois.png", idCiv: 9, homecityJson: "homecityxpiroquois" }],
+  [10 /* Lakota */, { name: "Lakota", urlCircle: "flag_hc_sioux.png", urlRectanle: "Flag_Sioux.png", urlLeft: "postgame_flag_sioux.png", idCiv: 10, homecityJson: "homecityxpsioux" }],
+  [11 /* Aztecs */, { name: "Aztecs", urlCircle: "flag_hc_aztec.png", urlRectanle: "Flag_Aztec.png", urlLeft: "postgame_flag_aztec.png", idCiv: 11, homecityJson: "homecityxpaztec" }],
+  [12 /* Chinese */, { name: "Chinese", urlCircle: "flag_hc_chinese.png", urlRectanle: "Flag_Chinese.png", urlLeft: "postgame_flag_chinese.png", idCiv: 12, homecityJson: "homecitychinese" }],
+  [13 /* Japanese */, { name: "Japanese", urlCircle: "flag_hc_japanese.png", urlRectanle: "Flag_Japanese.png", urlLeft: "postgame_flag_japanese.png", idCiv: 13, homecityJson: "homecityjapanese" }],
+  [14 /* Indians */, { name: "Indians", urlCircle: "flag_hc_indian.png", urlRectanle: "Flag_Indian.png", urlLeft: "postgame_flag_indian.png", idCiv: 14, homecityJson: "homecityindians" }],
+  [15 /* Inca */, { name: "Inca", urlCircle: "flag_hc_inca.png", urlRectanle: "Flag_Incan.png", urlLeft: "postgame_flag_inca.png", idCiv: 15, homecityJson: "homecitydeinca" }],
+  [16 /* Swedes */, { name: "Swedes", urlCircle: "flag_hc_swedish.png", urlRectanle: "Flag_Swedish.png", urlLeft: "postgame_flag_swedish.png", idCiv: 16, homecityJson: "homecityswedish" }],
+  [17 /* UnitedStates */, { name: "United States", urlCircle: "flag_hc_american.png", urlRectanle: "Flag_American.png", urlLeft: "postgame_flag_american.png", idCiv: 17, homecityJson: "homecityamericans" }],
+  [18 /* Ethiopians */, { name: "Ethiopians", urlCircle: "flag_hc_ethiopian.png", urlRectanle: "Flag_Ethiopian.png", urlLeft: "postgame_flag_ethiopian.png", idCiv: 18, homecityJson: "homecityethiopians" }],
+  [19 /* Hausa */, { name: "Hausa", urlCircle: "flag_hc_hausa.png", urlRectanle: "Flag_Hausa.png", urlLeft: "postgame_flag_hausa.png", idCiv: 19, homecityJson: "homecityhausa" }],
+  [20 /* Mexicans */, { name: "Mexicans", urlCircle: "flag_hc_mexican.png", urlRectanle: "Flag_Mexican.png", urlLeft: "postgame_flag_mexican.png", idCiv: 20, homecityJson: "homecitymexicans" }],
+  [21 /* Italians */, { name: "Italians", urlCircle: "flag_hc_italian.png", urlRectanle: "Flag_Italian.png", urlLeft: "postgame_flag_italian.png", idCiv: 21, homecityJson: "homecityitalians" }],
+  [22 /* Maltese */, { name: "Maltese", urlCircle: "flag_hc_maltese.png", urlRectanle: "Flag_Maltese.png", urlLeft: "postgame_flag_maltese.png", idCiv: 22, homecityJson: "homecitymaltese" }]
+]);
+var civMap = /* @__PURE__ */ new Map([
+  [1, 1 /* Spanish */],
+  [2, 2 /* British */],
+  [3, 3 /* French */],
+  [4, 4 /* Portuguese */],
+  [5, 5 /* Dutch */],
+  [6, 6 /* Russians */],
+  [7, 7 /* Germans */],
+  [8, 8 /* Ottoman */],
+  [15, 9 /* Haudenosaunee */],
+  [16, 10 /* Lakota */],
+  [17, 11 /* Aztecs */],
+  [19, 13 /* Japanese */],
+  [20, 12 /* Chinese */],
+  [21, 14 /* Indians */],
+  [27, 15 /* Inca */],
+  [28, 16 /* Swedes */],
+  [38, 17 /* UnitedStates */],
+  [39, 18 /* Ethiopians */],
+  [40, 19 /* Hausa */],
+  [42, 20 /* Mexicans */],
+  [44, 21 /* Italians */],
+  [45, 22 /* Maltese */]
+]);
+
+// src/parseChat.ts
+import { inflateRaw } from "pako";
 
 // src/util.ts
 function readString(dataView, position, length) {
@@ -398,6 +446,7 @@ function parseReplay(fileArrayBuffer) {
   let version = Number(exeInfo.split(" ")[1]);
   let dictionary = parseField(dataView);
   let gameSetting = {
+    gameName: dictionary["gamename"],
     allowCheats: dictionary["gameallowcheats"],
     blockade: dictionary["gameblockade"],
     playerCount: dictionary["gamenumplayers"],
@@ -421,10 +470,14 @@ function parseReplay(fileArrayBuffer) {
   };
   let players = [];
   for (let i = 1; i <= gameSetting.playerCount; i++) {
+    let civId = dictionary[`gameplayer${i}civ`];
+    let civ = civMap.get(civId);
+    let civInfo = civToInfo.get(civ);
     let player = {
       aiPersonality: dictionary[`gameplayer${i}aipersonality`],
       avatarId: dictionary[`gameplayer${i}avatarid`],
-      civId: dictionary[`gameplayer${i}civ`],
+      civId,
+      civInfo,
       civIsRandom: dictionary[`gameplayer${i}civwasrandom`],
       clan: dictionary[`gameplayer${i}clan`],
       color: dictionary[`gameplayer${i}color`],
