@@ -20,6 +20,7 @@ export interface GameSetting {
     gameType: number,
     mapCRC: number,
     mapName: string,
+    mapInfo: MapInfo,
     mapSet: string,
     freeForAll: boolean,
     hostTime: number, // ?
@@ -70,4 +71,13 @@ export interface Message {
     toId: number,
     message: string,
     time: number,
+}
+
+export interface MapInfo {
+    id: number;
+    idStr: string;
+    displayNameID: string;
+    details: string;
+    imagepath: string;
+    isLarge?: boolean;
 }

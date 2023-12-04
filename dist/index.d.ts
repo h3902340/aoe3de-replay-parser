@@ -26,6 +26,7 @@ interface GameSetting {
     gameType: number;
     mapCRC: number;
     mapName: string;
+    mapInfo: MapInfo;
     mapSet: string;
     freeForAll: boolean;
     hostTime: number;
@@ -72,6 +73,14 @@ interface Message {
     toId: number;
     message: string;
     time: number;
+}
+interface MapInfo {
+    id: number;
+    idStr: string;
+    displayNameID: string;
+    details: string;
+    imagepath: string;
+    isLarge?: boolean;
 }
 
 declare function parseChat(fileArrayBuffer: ArrayBuffer): Message[];

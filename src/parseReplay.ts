@@ -1,11 +1,13 @@
 import { inflateRaw } from "pako";
 import { Civ, civMap, civToInfo, headerLength } from "./constant";
-import { Replay, GameSetting, Player, Deck, Team } from "./dataStructures";
+import { Replay, GameSetting, Player, Deck, Team, MapInfo } from "./dataStructures";
 import { parseDeck } from "./parseDeck";
 import { parseField } from "./parseField";
 import { parseTeam } from "./parseTeam";
 import { readInt32, readString } from "./util";
+import mapJson from './maps.json';
 
+let mapInfos: { [k: string]: MapInfo } = mapJson;
 export function parseReplay(fileArrayBuffer: ArrayBuffer): Replay {
     let uint8Ary: Uint8Array = inflateRaw(fileArrayBuffer.slice(headerLength));
     let dataView: DataView = new DataView(uint8Ary.buffer);
@@ -14,6 +16,7 @@ export function parseReplay(fileArrayBuffer: ArrayBuffer): Replay {
     const exeInfo = readString(dataView, position, stringLength);
     let version: number = Number(exeInfo.split(' ')[1]);
     let dictionary = parseField(dataView);
+    let mapName: string = dictionary['gamefilename'];
     let gameSetting: GameSetting = {
         gameName: dictionary['gamename'],
         allowCheats: dictionary['gameallowcheats'],
@@ -26,7 +29,8 @@ export function parseReplay(fileArrayBuffer: ArrayBuffer): Replay {
         allowTradeMonopoly: dictionary['gametrademonopoly'],
         gameType: dictionary['gametype'],
         mapCRC: dictionary['gamefilecrc'],
-        mapName: dictionary['gamefilename'],
+        mapName: mapName,
+        mapInfo: mapInfos[mapName.toLocaleLowerCase()],
         mapSet: dictionary['gamefilenameext'],
         freeForAll: dictionary['gamefreeforall'],
         hostTime: dictionary['gamehosttime'],
